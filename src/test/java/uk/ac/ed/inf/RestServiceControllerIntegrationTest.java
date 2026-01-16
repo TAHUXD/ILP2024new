@@ -66,7 +66,9 @@ public class RestServiceControllerIntegrationTest {
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.type").value("Feature"))
                         .andExpect(jsonPath("$.geometry.type").value("LineString"))
-                        .andExpect(jsonPath("$.properties.name").value("Delivery Path"));
+                        .andExpect(jsonPath("$.properties.name").value("Delivery Path"))
+                        .andExpect(jsonPath("$.geometry.coordinates").isArray())
+                        .andExpect(jsonPath("$.geometry.coordinates.length()").isNumber());
         }
 }
 
