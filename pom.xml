@@ -64,6 +64,31 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.16.1</version>
+        
+        <dependencies>
+          <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.2.1</version>
+          </dependency>
+        </dependencies>
+
+        <configuration>
+          <targetClasses>
+            <param>uk.ac.ed.inf.*</param>
+          </targetClasses>
+          <targetTests>
+            <param>uk.ac.ed.inf.*</param>
+          </targetTests>
+          <outputFormats>
+            <param>HTML</param>
+          </outputFormats>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
