@@ -21,7 +21,7 @@ public class RestServiceControllerIntegrationTest {
     void testValidateOrder_Valid() throws Exception {
         String validOrderJson = "{ \"orderNo\": \"12345\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
                 + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}],"
-                + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/25\",\"cvv\":\"123\"}}";
+                + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"123\"}}";
 
         mockMvc.perform(post("/validateOrder")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -35,7 +35,7 @@ public class RestServiceControllerIntegrationTest {
     void testValidateOrder_Invalid() throws Exception {
         String invalidOrderJson = "{ \"orderNo\": \"12346\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":100,"
                 + "\"pizzasInOrder\":[],"
-                + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/25\",\"cvv\":\"123\"}}";
+                + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"123\"}}";
 
         mockMvc.perform(post("/validateOrder")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -49,7 +49,7 @@ public class RestServiceControllerIntegrationTest {
     void testCalcDeliveryPath_Valid() throws Exception {
         String validOrderJson = "{ \"orderNo\": \"12345\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
                 + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}],"
-                + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/25\",\"cvv\":\"123\"}}";
+                + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"123\"}}";
 
         mockMvc.perform(post("/calcDeliveryPath")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -62,7 +62,7 @@ public class RestServiceControllerIntegrationTest {
     void testCalcDeliveryPathGeoJSON_Valid() throws Exception {
         String validOrderJson = "{ \"orderNo\": \"12345\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
                 + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}],"
-                + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/25\",\"cvv\":\"123\"}}";
+                + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"123\"}}";
 
         mockMvc.perform(post("/calcDeliveryPathGeoJSON")
                         .contentType(MediaType.APPLICATION_JSON)

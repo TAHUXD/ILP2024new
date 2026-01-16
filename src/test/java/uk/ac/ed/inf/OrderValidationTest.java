@@ -52,7 +52,7 @@ public class OrderValidationTest {
         order.setPizzasInOrder(Arrays.asList(pizza));
         CreditCardInformation cc = new CreditCardInformation();
         cc.setCreditCardNumber("4485959141852684");
-        cc.setCreditCardExpiry("12/25");
+        cc.setCreditCardExpiry("12/30");
         cc.setCvv("123");
         order.setCreditCardInformation(cc);
         return order;
@@ -66,7 +66,7 @@ public class OrderValidationTest {
         order.setPizzasInOrder(Collections.emptyList());
         CreditCardInformation cc = new CreditCardInformation();
         cc.setCreditCardNumber("4485959141852684");
-        cc.setCreditCardExpiry("12/25");
+        cc.setCreditCardExpiry("12/30");
         cc.setCvv("123");
         order.setCreditCardInformation(cc);
         return order;
