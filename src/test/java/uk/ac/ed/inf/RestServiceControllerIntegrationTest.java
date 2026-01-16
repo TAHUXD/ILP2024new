@@ -53,7 +53,9 @@ public class RestServiceControllerIntegrationTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(VALID_ORDER_JSON))
                         .andExpect(status().isOk())
-                        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+                        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                        .andExpect(jsonPath("$").isArray())
+                        .andExpect(jsonPath("$.length()").isNumber());
         }
 
         @Test
