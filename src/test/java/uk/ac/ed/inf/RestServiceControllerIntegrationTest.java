@@ -70,5 +70,82 @@ public class RestServiceControllerIntegrationTest {
                         .andExpect(jsonPath("$.geometry.coordinates").isArray())
                         .andExpect(jsonPath("$.geometry.coordinates.length()").isNumber());
         }
+
+        //Invalid Order causes error 400 for path endpoint,added new test to cover controller "reject invalid" branch
+        @Test
+        void testCalcDeliveryPath_InvalidOrder_Returns400() throws Exception {
+                mockMvc.perform(post("/calcDeliveryPath")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(INVALID_ORDER_JSON))
+                        .andExpect(status().isBadRequest());
+        }       
+
+        //Boundary Test
+        @Test
+        void testValidateOrder_Invalid_TooManyPizzas() throws Exception {
+                String tooManyPizzasJson =
+                        "{ \"orderNo\": \"99999\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":5100,"
+                                + "\"pizzasInOrder\":["
+                                + "{\"name\":\"R1: Margarita\",\"priceInPence\":1000},"
+                                + "{\"name\":\"R1: Margarita\",\"priceInPence\":1000},"
+                                + "{\"name\":\"R1: Margarita\",\"priceInPence\":1000},"
+                                + "{\"name\":\"R1: Margarita\",\"priceInPence\":1000},"
+                                + "{\"name\":\"R1: Margarita\",\"priceInPence\":1000}"
+                                + "],"
+                                + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"123\"}}";
+
+                mockMvc.perform(post("/validateOrder")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(tooManyPizzasJson))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.orderStatus").value("INVALID"))
+                        .andExpect(jsonPath("$.orderValidationCode").value("MAX_PIZZA_COUNT_EXCEEDED"));
+        }
+
+        @Test
+        void testValidateOrder_Invalid_TotalIncorrect() throws Exception {
+        String wrongTotalJson =
+                "{ \"orderNo\": \"20001\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":9999,"
+                        + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}],"
+                        + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"123\"}}";
+
+        mockMvc.perform(post("/validateOrder")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(wrongTotalJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderStatus").value("INVALID"))
+                .andExpect(jsonPath("$.orderValidationCode").value("TOTAL_INCORRECT"));
+        }
+
+        @Test
+        void testValidateOrder_Invalid_CardNumberInvalid() throws Exception {
+        String badCardNumberJson =
+                "{ \"orderNo\": \"20002\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
+                        + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}],"
+                        + "\"creditCardInformation\":{\"creditCardNumber\":\"123\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"123\"}}";
+
+        mockMvc.perform(post("/validateOrder")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(badCardNumberJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderStatus").value("INVALID"))
+                .andExpect(jsonPath("$.orderValidationCode").value("CARD_NUMBER_INVALID"));
+        }
+
+        @Test
+        void testValidateOrder_Invalid_CvvInvalid() throws Exception {
+        String badCvvJson =
+                "{ \"orderNo\": \"20003\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
+                        + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}],"
+                        + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"12\"}}";
+
+        mockMvc.perform(post("/validateOrder")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(badCvvJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderStatus").value("INVALID"))
+                .andExpect(jsonPath("$.orderValidationCode").value("CVV_INVALID"));
+        }
+
 }
 
