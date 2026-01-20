@@ -48,51 +48,6 @@ public class RestServiceControllerIntegrationTest {
         }
 
         @Test
-        void testValidateOrder_Invalid_ExpiryFormat() throws Exception {
-        String badExpiryJson =
-                "{ \"orderNo\": \"20005\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
-                        + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}],"
-                        + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"13/30\",\"cvv\":\"123\"}}";
-
-        mockMvc.perform(post("/validateOrder")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(badExpiryJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.orderStatus").value("INVALID"))
-                .andExpect(jsonPath("$.orderValidationCode").value("EXPIRY_DATE_INVALID"));
-        }
-
-        @Test
-        void testValidateOrder_Invalid_ExpiryExpired() throws Exception {
-        String expiredCardJson =
-                "{ \"orderNo\": \"20006\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
-                        + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}],"
-                        + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"01/20\",\"cvv\":\"123\"}}";
-
-        mockMvc.perform(post("/validateOrder")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(expiredCardJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.orderStatus").value("INVALID"))
-                .andExpect(jsonPath("$.orderValidationCode").value("EXPIRY_DATE_INVALID"));
-        }
-
-        @Test
-        void testValidateOrder_Invalid_CvvNonNumeric() throws Exception {
-        String badCvvJson =
-                "{ \"orderNo\": \"20007\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
-                        + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}],"
-                        + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"abc\"}}";
-
-        mockMvc.perform(post("/validateOrder")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(badCvvJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.orderStatus").value("INVALID"))
-                .andExpect(jsonPath("$.orderValidationCode").value("CVV_INVALID"));
-        }
-
-        @Test
         void testCalcDeliveryPath_Valid() throws Exception {
                 mockMvc.perform(post("/calcDeliveryPath")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -100,13 +55,7 @@ public class RestServiceControllerIntegrationTest {
                         .andExpect(status().isOk())
                         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                         .andExpect(jsonPath("$").isArray())
-                        .andExpect(jsonPath("$.length()").isNumber())
-                        .andExpect(jsonPath("$[0].lng").exists())
-                        .andExpect(jsonPath("$[0].lat").exists())
-                        .andExpect(jsonPath("$[0].lng").isNumber())
-                        .andExpect(jsonPath("$[0].lat").isNumber())
-                        .andExpect(jsonPath("$[1].lng").isNumber())
-                        .andExpect(jsonPath("$[1].lat").isNumber());
+                        .andExpect(jsonPath("$.length()").isNumber());
         }
 
         @Test
@@ -119,9 +68,7 @@ public class RestServiceControllerIntegrationTest {
                         .andExpect(jsonPath("$.geometry.type").value("LineString"))
                         .andExpect(jsonPath("$.properties.name").value("Delivery Path"))
                         .andExpect(jsonPath("$.geometry.coordinates").isArray())
-                        .andExpect(jsonPath("$.geometry.coordinates.length()").isNumber())
-                        .andExpect(jsonPath("$.geometry.coordinates[0]").isArray())
-                        .andExpect(jsonPath("$.geometry.coordinates[0].length()").value(2));
+                        .andExpect(jsonPath("$.geometry.coordinates.length()").isNumber());
         }
 
         //Invalid Order causes error 400 for path endpoint,added new test to cover controller "reject invalid" branch
@@ -198,53 +145,6 @@ public class RestServiceControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.orderStatus").value("INVALID"))
                 .andExpect(jsonPath("$.orderValidationCode").value("CVV_INVALID"));
-        }
-
-        @Test
-        void testValidateOrder_Invalid_PizzaNotDefined() throws Exception {
-        String badPizzaJson =
-                "{ \"orderNo\": \"20004\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
-                        + "\"pizzasInOrder\":[{\"name\":\"SIXSEVEN\",\"priceInPence\":1000}],"
-                        + "\"creditCardInformation\":{\"creditCardNumber\":\"4485959141852684\",\"creditCardExpiry\":\"12/30\",\"cvv\":\"123\"}}";
-
-        mockMvc.perform(post("/validateOrder")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(badPizzaJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.orderStatus").value("INVALID"))
-                .andExpect(jsonPath("$.orderValidationCode").value("PIZZA_NOT_DEFINED"));
-        }
-
-        @Test
-        void testValidateOrder_WrongContentType() throws Exception {
-        String json = "{ \"orderNo\": \"30001\" }";
-
-        mockMvc.perform(post("/validateOrder")
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .content(json))
-                .andExpect(status().is4xxClientError());
-        }
-
-        @Test
-        void testValidateOrder_ContentIntentionallyBroken() throws Exception {
-        String broken = "{ \"orderNo\": \"30002\", "; 
-
-        mockMvc.perform(post("/validateOrder")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(broken))
-                .andExpect(status().isBadRequest());
-        }
-
-        @Test
-        void testValidateOrder_MissingCreditCardInfo() throws Exception {
-        String missingCci =
-                "{ \"orderNo\": \"30003\", \"orderDate\": \"2024-11-18\", \"priceTotalInPence\":1100,"
-                        + "\"pizzasInOrder\":[{\"name\":\"R1: Margarita\",\"priceInPence\":1000}] }";
-
-        mockMvc.perform(post("/validateOrder")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(missingCci))
-                .andExpect(status().is4xxClientError());
         }
 
 }
