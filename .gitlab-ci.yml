@@ -1,0 +1,53 @@
+image: maven:3.9.6-eclipse-temurin-17
+
+stages:
+  - test
+  - coverage
+  - mutation
+
+cache:
+  key: maven-cache
+  paths:
+    - .m2/repository
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MAVEN_CLI_OPTS: "-B -DskipTests=false"
+
+unit_and_integration_tests:
+  stage: test
+  script:
+    - mvn $MAVEN_CLI_OPTS test
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+    paths:
+      - target/surefire-reports/
+    expire_in: 7 days
+
+jacoco_report:
+  stage: coverage
+  script:
+    - mvn $MAVEN_CLI_OPTS test jacoco:report
+  artifacts:
+    when: always
+    paths:
+      - target/site/jacoco/
+    expire_in: 7 days
+  needs: ["unit_and_integration_tests"]
+
+pitest_mutation:
+  stage: mutation
+  script:
+    - mvn $MAVEN_CLI_OPTS test pitest:mutationCoverage
+  artifacts:
+    when: always
+    paths:
+      - target/pit-reports/
+    expire_in: 7 days
+  needs: ["unit_and_integration_tests"]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
