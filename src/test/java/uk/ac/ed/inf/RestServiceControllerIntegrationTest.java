@@ -8,7 +8,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.closeTo;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -246,6 +248,167 @@ public class RestServiceControllerIntegrationTest {
                         .content(missingCci))
                 .andExpect(status().is4xxClientError());
         }
+
+        //Added to try increase mutation score and reduce no_coverage and kill surviving mutants
+        // /uuid 
+        @Test
+        void testUuid_ReturnsStudentId() throws Exception {
+        mockMvc.perform(get("/uuid"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("s2172881"));
+        }
+
+        // /distanceTo
+        @Test
+        void testDistanceTo_Valid() throws Exception {
+        String body = """
+                {
+                "position1": {"lng": 0.0, "lat": 0.0},
+                "position2": {"lng": 3.0, "lat": 4.0}
+                }
+                """;
+        mockMvc.perform(post("/distanceTo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(content().string("5.0")); // sqrt(3^2+4^2)
+        }
+
+        @Test
+        void testDistanceTo_InvalidCoordinate_Returns400() throws Exception {
+        String body = """
+                {
+                "position1": {"lng": 200.0, "lat": 0.0},
+                "position2": {"lng": 0.0, "lat": 0.0}
+                }
+                """;
+        mockMvc.perform(post("/distanceTo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void testDistanceTo_BrokenJson_Returns400() throws Exception {
+        String broken = "{ \"position1\": { \"lng\": 0.0 ";
+        mockMvc.perform(post("/distanceTo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(broken))
+                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void testDistanceTo_EmptyBody_Returns400() throws Exception {
+        mockMvc.perform(post("/distanceTo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(""))
+                .andExpect(status().isBadRequest());
+        }
+
+        // /isCloseTo
+        @Test
+        void testIsCloseTo_JustBelowThreshold_True() throws Exception {
+        String body = """
+                {
+                "position1": {"lng": 0.0, "lat": 0.0},
+                "position2": {"lng": 0.00014999, "lat": 0.0}
+                }
+                """;
+        mockMvc.perform(post("/isCloseTo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+        }
+
+        @Test
+        void testIsCloseTo_ExactlyThreshold_False() throws Exception {
+        String body = """
+                {
+                "position1": {"lng": 0.0, "lat": 0.0},
+                "position2": {"lng": 0.00015, "lat": 0.0}
+                }
+                """;
+        mockMvc.perform(post("/isCloseTo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(content().string("false"));
+        }
+
+        // /nextPosition
+        @Test
+        void testNextPosition_Angle0_Valid() throws Exception {
+        String body = """
+                { "start": {"lng": 1.0, "lat": 2.0}, "angle": 0 }
+                """;
+        mockMvc.perform(post("/nextPosition")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lng").isNumber())
+                .andExpect(jsonPath("$.lat").isNumber());
+        }
+
+        @Test
+        void testNextPosition_InvalidAngle_Returns400() throws Exception {
+        String body = """
+                { "start": {"lng": 1.0, "lat": 2.0}, "angle": -1 }
+                """;
+        mockMvc.perform(post("/nextPosition")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+        }
+
+        // /isInRegion
+        @Test
+        void testIsInRegion_Inside_ReturnsTrue() throws Exception {
+        String body = """
+                {
+                "position": {"lng": 0.5, "lat": 0.5},
+                "region": {
+                "name": "square",
+                "vertices": [
+                {"lng": 0.0, "lat": 0.0},
+                {"lng": 0.0, "lat": 1.0},
+                {"lng": 1.0, "lat": 1.0},
+                {"lng": 1.0, "lat": 0.0},
+                {"lng": 0.0, "lat": 0.0}
+                ]
+                }
+                }
+                """;
+        mockMvc.perform(post("/isInRegion")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
+        }
+
+        @Test
+        void testIsInRegion_OpenPolygon_Returns400() throws Exception {
+        // Not closed (last vertex != first) => your code returns 400 and spec expects invalid
+        String body = """
+                {
+                "position": {"lng": 0.5, "lat": 0.5},
+                "region": {
+                "name": "open",
+                "vertices": [
+                {"lng": 0.0, "lat": 0.0},
+                {"lng": 0.0, "lat": 1.0},
+                {"lng": 1.0, "lat": 1.0},
+                {"lng": 1.0, "lat": 0.0}
+                ]
+                }
+                }
+                """;
+        mockMvc.perform(post("/isInRegion")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+}
+
 
 }
 
