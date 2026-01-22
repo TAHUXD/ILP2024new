@@ -125,7 +125,8 @@ public class RestServiceControllerIntegrationTest {
                         .andExpect(jsonPath("$.geometry.coordinates[0]").isArray())
                         .andExpect(jsonPath("$.geometry.coordinates[0].length()").value(2));
         }
-
+        
+        // Stage 1
         //Invalid Order causes error 400 for path endpoint,added new test to cover controller "reject invalid" branch
         @Test
         void testCalcDeliveryPath_InvalidOrder_Returns400() throws Exception {
@@ -249,7 +250,7 @@ public class RestServiceControllerIntegrationTest {
                 .andExpect(status().is4xxClientError());
         }
 
-        //Added to try increase mutation score and reduce no_coverage and kill surviving mutants
+        // Stage 2 onwards (becasue only recorded PIT numbers for start, stage 1, and final): Added to try increase mutation score and reduce no_coverage and kill surviving mutants
         // /uuid 
         @Test
         void testUuid_ReturnsStudentId() throws Exception {
@@ -388,7 +389,6 @@ public class RestServiceControllerIntegrationTest {
 
         @Test
         void testIsInRegion_OpenPolygon_Returns400() throws Exception {
-        // Not closed (last vertex != first) => your code returns 400 and spec expects invalid
         String body = """
                 {
                 "position": {"lng": 0.5, "lat": 0.5},
